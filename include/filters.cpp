@@ -35,15 +35,14 @@ void box_blur_cpu(const GrayImage& input, GrayImage& output, int kernel_size) {
             // Convolution on kernel
             for (int i = -radius; i < radius; ++i) {
                 for (int j = -radius; j < radius; ++j) {
-                    int py = clamp_int(y+i, 0, h-1);
+                    int py = clamp_int(y+i, 0, h-1); // clamp on coordinates to not get out of the borders
                     int px = clamp_int(x+j, 0, w-1);
                     sum += input.at(py, px);
                 }
             }
 
-
             int val = sum / area;
-            output.at(y, x) = static_cast<uint8_t>(clamp_int(val, 0, 255));
+            output.at(y, x) = static_cast<uint8_t>(clamp_int(val, 0, 255)); // clamp on values to remain in range [0,255]
         }
     }
 
