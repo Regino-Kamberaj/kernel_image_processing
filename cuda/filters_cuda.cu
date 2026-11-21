@@ -45,24 +45,23 @@ void box_blur_cuda_naive(const GrayImage& input, GrayImage& output, int kernel_s
 
     output.width = input.width;
     output.height = input.height;
-    output.max_value = input.max_value;
+    output.max_value = input.max_val;
     output.data.resize(input.data.size());
 
     size_t input_size = input.data.size() * sizeof(uint8_t);
 
     uint8_t* input_data = nullptr;
-    CHECK_CUDA(cudaMalloc((void**)&input_data, input_size));
+    CHECK_CUDA(cudaMalloc(&input_data, input_size));
     uint8_t* output_data = nullptr;
-    CHECK_CUDA(cudaMalloc((void**)&output_data, output_size));
+    CHECK_CUDA(cudaMalloc(&output_data, input_size));
     CHECK_CUDA(cudaMemcpy( input_data, input.data.data(),
                   input_size, cudaMemcpyDeviceToHost));
 
     dim3 blockSize(16,16);
     dim3 gridSize((input.width + blockSize.x - 1) / blockSize.x,
-     (input.height + blockSize.y - 1) / blockSize.y;
+     (input.height + blockSize.y - 1) / blockSize.y);
 
-    box_blur_naive_kernel<<<gridSize, blockSize>>>(input_data, output_data,
-         input.width, input.height, kernel_size);
+    box_blur_naive_kernel<<<gridSize, blockSize>>>(input_data, output_data, input.width, input.height, kernel_size);
 
     CHECK_CUDA(cudaGetLastError());
     CHECK_CUDA(cudaDeviceSynchronize());
@@ -94,7 +93,7 @@ __global__ void box_blur_tiled_kernel(
         for(int dx = -HALO; dx <= HALO; dx++) {
             int py = min(max(y+dy, 0), height - 1);
             int px = min(max(x+dx, 0), width - 1);
-            tile[ty + dy + HALO][tx + dx è HALO] = input[py * width + px];
+            tile[ty + dy + HALO][tx + dx + HALO] = input[py * width + px];
     }
 
     __syncthreads();
@@ -113,8 +112,7 @@ __global__ void box_blur_tiled_kernel(
 }
 
 void box_blur_cuda_tiled(const GrayImage& input, GrayImage& output, int kernel_size){
-    std::cout << "***** Starting box_blur_cuda_tiled function *******"
-        << std::endl;
+    std::cout << "***** Starting box_blur_cuda_tiled function *******" << std::endl;
 
     output.width = input.width;
     output.height = input.height;
@@ -124,29 +122,25 @@ void box_blur_cuda_tiled(const GrayImage& input, GrayImage& output, int kernel_s
     size_t input_size = input.data.size() * sizeof(uint8_t);
 
     uint8_t* input_data = nullptr;
-    CHECK_CUDA(cudaMalloc((void**)&input_data, input_size));
+    CHECK_CUDA(cudaMalloc(&input_data, input_size));
     uint8_t* output_data = nullptr;
-    CHECK_CUDA(cudaMalloc((void**)&output_data, output_size));
-    CHECK_CUDA(cudaMemcpy( input_data, input.data.data(),
-             input_size, cudaMemcpyDeviceToHost));
+    CHECK_CUDA(cudaMalloc(&output_data, input_size));
+    CHECK_CUDA(cudaMemcpy(input_data, input.data.data(), input_size, cudaMemcpyDeviceToHost));
 
     dim3 blockSize(TILE_SIZE,TILE_SIZE);
     dim3 gridSize((input.width + TILE_SIZE.x - 1) / TILE_SIZE,
-     (input.height + TILE_SIZE - 1) / TILE_SIZE;
+     (input.height + TILE_SIZE - 1) / TILE_SIZE);
 
-    box_blur_naive_kernel<<<gridSize,blockSize>>>(input_data, output_data,
-         input.width, input.height, kernel_size);
+    box_blur_tiled_kernel<<<gridSize,blockSize>>>(input_data, output_data, input.width, input.height, kernel_size);
 
     CHECK_CUDA(cudaGetLastError());
     CHECK_CUDA(cudaDeviceSynchronize());
-    CHECK_CUDA(cudaMemcpy(output.data.data(), output_data,
-     input_size, cudaMemcpyDeviceToHost));
+    CHECK_CUDA(cudaMemcpy(output.data.data(), output_data, input_size, cudaMemcpyDeviceToHost));
 
     CHECK_CUDA(cudaFree(input_data));
     CHECK_CUDA(cudaFree(output_data));
 
-    std::cout << "***** Finished box_blur_cuda_tiled function: "
-    << input.width << "x" << input.height << " *****" << std::endl;
+    std::cout << "***** Finished box_blur_cuda_tiled function: " << input.width << "x" << input.height << " *****" << std::endl;
 }
 
 #else
