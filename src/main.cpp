@@ -1,5 +1,6 @@
 #include <iomanip>
 #include <iostream>
+#include <chrono>
 
 #include "filters.h"
 #include "../cuda/filters_cuda.h"
