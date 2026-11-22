@@ -55,7 +55,7 @@ void box_blur_cuda_naive(const GrayImage& input, GrayImage& output, int kernel_s
     uint8_t* output_data = nullptr;
     CHECK_CUDA(cudaMalloc(&output_data, input_size));
     CHECK_CUDA(cudaMemcpy( input_data, input.data.data(),
-                  input_size, cudaMemCopyHostToDevice));
+                  input_size, cudaMemcpyHostToDevice));
 
     dim3 blockSize(16,16);
     dim3 gridSize((input.width + blockSize.x - 1) / blockSize.x,
@@ -124,7 +124,7 @@ void box_blur_cuda_tiled(const GrayImage& input, GrayImage& output, int kernel_s
     CHECK_CUDA(cudaMalloc(&input_data, input_size));
     uint8_t* output_data = nullptr;
     CHECK_CUDA(cudaMalloc(&output_data, input_size));
-    CHECK_CUDA(cudaMemcpy(input_data, input.data.data(), input_size, cudaMemCopyHostToDevice));
+    CHECK_CUDA(cudaMemcpy(input_data, input.data.data(), input_size, cudaMemcpyHostToDevice));
 
     dim3 blockSize(TILE_SIZE,TILE_SIZE);
     dim3 gridSize((input.width + TILE_SIZE - 1) / TILE_SIZE,
