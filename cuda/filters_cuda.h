@@ -7,7 +7,7 @@
 
 #include "../include/image_io.h"
 
-void box_blur_cuda_naive(const GrayImage& input, GrayImage& output, int kernel_size = 3);
+void box_blur_cuda_naive(const GrayImage& input, GrayImage& output, int kernel_size = 3, int block_size = 16);
 void box_blur_cuda_tiled(const GrayImage& input, GrayImage& output, int kernel_size = 3);
 
 void gaussian_blur_cuda_naive(const GrayImage& input, GrayImage& output);

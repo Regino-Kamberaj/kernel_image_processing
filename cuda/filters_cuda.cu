@@ -39,7 +39,7 @@ __global__ void box_blur_naive_kernel(const uint8_t* input, uint8_t* output,
     output[y * width + x] = static_cast<uint8_t>(sum / area);
 }
 
-void box_blur_cuda_naive(const GrayImage& input, GrayImage& output, int kernel_size){
+void box_blur_cuda_naive(const GrayImage& input, GrayImage& output, int kernel_size, int block_size){
     std::cout << "***** Starting box_blur_cuda_naive function *******"
         << std::endl;
 
@@ -57,9 +57,11 @@ void box_blur_cuda_naive(const GrayImage& input, GrayImage& output, int kernel_s
     CHECK_CUDA(cudaMemcpy( input_data, input.data.data(),
                   input_size, cudaMemcpyHostToDevice));
 
-    dim3 blockSize(16,16);
-    dim3 gridSize((input.width + blockSize.x - 1) / blockSize.x,
-     (input.height + blockSize.y - 1) / blockSize.y);
+    dim3 blockSize(block_size,block_size);
+    dim3 gridSize(
+        (input.width + blockSize.x - 1) / blockSize.x,
+        (input.height + blockSize.y - 1) / blockSize.y
+     );
 
     box_blur_naive_kernel<<<gridSize, blockSize>>>(input_data, output_data, input.width, input.height, kernel_size);
 
@@ -137,7 +139,7 @@ void box_blur_cuda_tiled(const GrayImage& input, GrayImage& output, int kernel_s
 }
 
 #else
-void box_blur_cuda_naive(const GrayImage& input, GrayImage& output, int kernel_size){
+void box_blur_cuda_naive(const GrayImage& input, GrayImage& output, int kernel_size, int block_size){
     std::cerr << "***** Error on starting box_blur_cuda_naived: CUDA not working ******" << std::endl;
 }
 
