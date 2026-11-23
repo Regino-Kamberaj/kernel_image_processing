@@ -257,7 +257,7 @@ __global__ void box_blur_tiled_kernel_optimized(const uint8_t* __restrict__ inpu
 }
 
 void box_blur_cuda_tiled_optimized(const GrayImage& input, GrayImage& output, int kernel_size){
-    std::cout << "***** Starting box_blur_cuda_tiled function *******" << std::endl;
+    std::cout << "***** Starting box_blur_cuda_tiled_optimized function *******" << std::endl;
 
     output.width = input.width;
     output.height = input.height;
@@ -287,7 +287,7 @@ void box_blur_cuda_tiled_optimized(const GrayImage& input, GrayImage& output, in
     CHECK_CUDA(cudaFree(input_data));
     CHECK_CUDA(cudaFree(output_data));
 
-    std::cout << "***** Finished box_blur_cuda_tiled function: " << input.width << "x" << input.height << " *****" << std::endl;
+    std::cout << "***** Finished box_blur_cuda_tiled_optimized function: " << input.width << "x" << input.height << " *****" << std::endl;
 }
 
 #else
