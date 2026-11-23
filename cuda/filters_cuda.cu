@@ -146,11 +146,11 @@ void box_blur_cuda_tiled(const GrayImage& input, GrayImage& output, int kernel_s
     std::cout << "***** Finished box_blur_cuda_tiled function: " << input.width << "x" << input.height << " *****" << std::endl;
 }
 
+#define TILE_DIM (TILE_SIZE + 2*HALO)
 // kernel tiled optimized => evito di ricaricare più volte i vicini
 __global__ void box_blur_tiled_kernel_optimized(const uint8_t* __restrict__ input,
     uint8_t* output, int width, int height) {
-    int tile_size = TILE_SIZE + 2*HALO; //add border
-    __shared__ uint8_t tile[tile_size][tile_size]; // aggiungo 1 pixel di bordo per ogni lato
+   __shared__ uint8_t tile[TILE_DIM][TILE_DIM]; // aggiungo 1 pixel di bordo per ogni lato
 
     // coordinate locali del thread nel blocco
     int tx = threadIdx.x;
@@ -179,7 +179,7 @@ __global__ void box_blur_tiled_kernel_optimized(const uint8_t* __restrict__ inpu
         int px = min(x+HALO, width-1);
         int py = y;
         if (px < width && py < height) {
-            tile[ty+HALO][tile_size - 1] = input[py * width + px];
+            tile[ty+HALO][TILE_DIM - 1] = input[py * width + px];
         }
     }
 
@@ -197,7 +197,7 @@ __global__ void box_blur_tiled_kernel_optimized(const uint8_t* __restrict__ inpu
         int px = x;
         int py = min(y+HALO, height-1);
         if (px < width && py < height) {
-            tile[tile_size - 1][tx+HALO] = input[py * width + px];
+            tile[TILE_DIM - 1][tx+HALO] = input[py * width + px];
         }
     }
 
@@ -217,7 +217,7 @@ __global__ void box_blur_tiled_kernel_optimized(const uint8_t* __restrict__ inpu
                 case TILE_SIZE - 1:
                     // angolo in basso a sinistra
                     py = min(y+HALO, height-1);
-                    tile[tile_size - 1][0] = input[py * width + px];
+                    tile[TILE_DIM - 1][0] = input[py * width + px];
                     break;
             }
             break;
@@ -228,12 +228,12 @@ __global__ void box_blur_tiled_kernel_optimized(const uint8_t* __restrict__ inpu
                 case 0:
                     // angolo in alto a destra
                     py = max(y-HALO,0);
-                    tile[0][tile_size-1] = input[py * width + px];
+                    tile[0][TILE_DIM-1] = input[py * width + px];
                     break;
                 case TILE_SIZE - 1:
                     // angolo in basso a destra
                     py = min(y+HALO, height-1);
-                    tile[tile_size - 1][tile_size-1] = input[py * width + px];
+                    tile[tile_size - 1][TILE_DIM-1] = input[py * width + px];
                     break;
             }
             break;
