@@ -233,7 +233,7 @@ __global__ void box_blur_tiled_kernel_optimized(const uint8_t* __restrict__ inpu
                 case TILE_SIZE - 1:
                     // angolo in basso a destra
                     py = min(y+HALO, height-1);
-                    tile[tile_size - 1][TILE_DIM-1] = input[py * width + px];
+                    tile[TILE_DIM - 1][TILE_DIM-1] = input[py * width + px];
                     break;
             }
             break;
