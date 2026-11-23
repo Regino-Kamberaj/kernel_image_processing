@@ -19,6 +19,8 @@ static void execute_filter_device(std::string &device, GrayImage &img, GrayImage
         box_blur_cuda_naive(img, output, 3, block_size);
     }else if (device == "gpu_tiled") {
         box_blur_cuda_tiled(img, output);
+    }else if (device == "gpu_tiled_optimized") {
+        box_blur_cuda_tiled_optimized(img, output);
     }else {
         std::cerr << "Unsupported device." << std::endl;
         //return 1;
