@@ -10,12 +10,13 @@ static const std::string DEFAULT_INPUT =  "../test_images/pbmlib.pgm";
 static const std::string DEFAULT_FILTER=  "box";
 static const std::string DEFAULT_DEVICE =  "cpu";
 static const int NUM_ITERATIONS = 100;
+static const int BLOCK_SIZE = 16;
 
-static void execute_filter_device(std::string &device, GrayImage &img, GrayImage& output) {
+static void execute_filter_device(std::string &device, GrayImage &img, GrayImage& output, int block_size) {
     if (device == "cpu") {
         box_blur_cpu(img, output);
     }else if (device == "gpu_naive") {
-        box_blur_cuda_naive(img, output);
+        box_blur_cuda_naive(img, output, 3, block_size);
     }else if (device == "gpu_tiled") {
         box_blur_cuda_tiled(img, output);
     }else {
@@ -56,9 +57,11 @@ int main(int argc, char** argv) {
     std::string filter = (argc >= 3) ? argv[2] : DEFAULT_FILTER;
     int iterations = (argc >= 4) ? atoi(argv[3]) : NUM_ITERATIONS;
     std::string device = (argc >= 5) ? argv[4] : DEFAULT_DEVICE;
+    int block_size = (argc >= 6) ? atoi(argv[5]) : BLOCK_SIZE;
 
     std::cout << "Input: " << filename
     << "\tFilter: " << filter
+    << "\tBlock size:" << block_size
     << "\tDevice:" << device
     << "\tIterations: " << iterations << std::endl;
 
@@ -81,11 +84,11 @@ int main(int argc, char** argv) {
 
         GrayImage output;
 
-        execute_filter_device(device, img, output);
+        execute_filter_device(device, img, output, block_size);
 
         auto t0 = std::chrono::steady_clock::now();
         for (int i = 0; i < iterations; ++i) {
-            execute_filter_device(device, img, output);
+            execute_filter_device(device, img, output, block_size);
         }
 
         auto t1 = std::chrono::steady_clock::now();
