@@ -87,27 +87,21 @@ __global__ void box_blur_tiled_kernel(const uint8_t* __restrict__ input,
     int x = blockIdx.x*TILE_SIZE +tx;
     int y = blockIdx.y*TILE_SIZE +ty;
 
+    // ogni thread carica solo il suo pixel e non i 9 vicini
+    if (x < width && y < height) {
+        tile[ty+HALO][tx+HALO] = input[y*width + x];
+    }
+
+    __syncthreads();
+
+    int sum = 0;
     for(int dy = -HALO; dy <= HALO; dy++) {
         for(int dx = -HALO; dx <= HALO; dx++) {
-            int py = min(max(y+dy, 0), height - 1);
-            int px = min(max(x+dx, 0), width - 1);
-            tile[ty + dy + HALO][tx + dx + HALO] = input[py * width + px];
+            sum += tile[ty+dy+HALO][tx+dx+HALO];
         }
-
-        __syncthreads();
-
-        if(x >= width || y >= height)
-            return;
-
-        int sum = 0;
-        for(int dy = -HALO; dy <= HALO; dy++) {
-            for(int dx = -HALO; dx <= HALO; dx++) {
-                sum += tile[ty+dy+HALO][tx+dx + HALO];
-            }
-        }
-
-        output[y * width + x] = static_cast<uint8_t>(sum / 9);
     }
+
+    output[y * width + x] = static_cast<uint8_t>(sum / 9);
 }
 
 void box_blur_cuda_tiled(const GrayImage& input, GrayImage& output, int kernel_size){
